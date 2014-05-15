@@ -16,6 +16,7 @@ struct Cardinal<T> {
     sw: T,
     se: T
 }
+
 impl <T> Cardinal<T> {
     fn new( nw: T, ne: T, sw: T, se: T) -> Cardinal<T> {
         Cardinal { nw: nw, ne: ne, sw: sw, se: se }
@@ -109,10 +110,16 @@ impl <N: QTNumber, P: Point<N> + Clone> QuadTree<N, P> {
         }
     }
 
-    fn is_full(&self) -> bool {
+    fn is_full(&self, p: &P) -> bool {
         match self {
             &Node { ref bounding, ref children, ref cutoff } => false,
-            &Leaf { ref bounding, ref contents, ref cutoff } => contents.len() == *cutoff
+            &Leaf { ref bounding, ref contents, ref cutoff } => {
+                if contents.len() == *cutoff {
+                    !contents.iter().any(|op| op.x() == p.x() && op.y() == p.y())
+                } else {
+                    false
+                }
+            }
         }
     }
 
@@ -152,7 +159,7 @@ impl <N: QTNumber, P: Point<N> + Clone> QuadTree<N, P> {
                     rep = &mut children.sw;
                 }
                 assert!(rep.contains(&p), "{:?}, {:?}", rep, p);
-                if !rep.is_full() {
+                if !rep.is_full(&p) {
                     rep.insert(p);
                 } else {
                     *rep = rep.breakup();
@@ -189,6 +196,15 @@ fn testBasic() {
     tree.insert(Pt::new(2.0, 2.0));
     tree.insert(Pt::new(3.0, 3.0));
     tree.insert(Pt::new(4.0, 4.0));
+    tree.insert(Pt::new(5.0, 5.0));
+
+    tree.insert(Pt::new(5.0, 5.0));
+    tree.insert(Pt::new(5.0, 5.0));
+    tree.insert(Pt::new(5.0, 5.0));
+    tree.insert(Pt::new(5.0, 5.0));
+    tree.insert(Pt::new(5.0, 5.0));
+    tree.insert(Pt::new(5.0, 5.0));
+    tree.insert(Pt::new(5.0, 5.0));
     tree.insert(Pt::new(5.0, 5.0));
 
     println!("{:?}", tree);
